@@ -27,6 +27,7 @@ class VehicleSpeedManager(context: Context) {
         val callback = object : CarPropertyManager.CarPropertyEventCallback {
 
             override fun onChangeEvent(event: CarPropertyValue<*>?) {
+                Timber.i("Vehicle speed changed: ${event?.value}")
                 if (event?.propertyId == VehiclePropertyIds.PERF_VEHICLE_SPEED) {
                     val speedValue = event.value as Float
                     trySend(speedValue)

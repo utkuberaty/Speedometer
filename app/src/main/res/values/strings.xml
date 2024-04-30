@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Speedster Dash</string>
+    <string name="real_speed">Real Speed</string>
+    <string name="light_mode">Light Mode</string>
+</resources>

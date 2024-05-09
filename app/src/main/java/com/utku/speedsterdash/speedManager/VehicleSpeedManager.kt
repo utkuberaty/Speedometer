@@ -6,7 +6,6 @@ import android.car.hardware.CarPropertyValue
 import android.car.hardware.property.CarPropertyManager
 import android.car.hardware.property.CarPropertyManager.SENSOR_RATE_FASTEST
 import android.content.Context
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.callbackFlow
@@ -17,15 +16,12 @@ class VehicleSpeedManager(context: Context) {
     private val car: Car = Car.createCar(context)
     private var carPropertyManager: CarPropertyManager? = null
 
-    private var mockSpeedJob: Job? = null
-
     init {
         carPropertyManager = car.getCarManager(Car.PROPERTY_SERVICE) as CarPropertyManager
     }
 
     fun getVehicleSpeedContinuous() = callbackFlow {
         val callback = object : CarPropertyManager.CarPropertyEventCallback {
-
             override fun onChangeEvent(event: CarPropertyValue<*>?) {
                 Timber.i("Vehicle speed changed: ${event?.value}")
                 if (event?.propertyId == VehiclePropertyIds.PERF_VEHICLE_SPEED) {

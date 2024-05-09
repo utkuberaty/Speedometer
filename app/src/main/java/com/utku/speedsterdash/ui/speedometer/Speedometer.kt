@@ -30,8 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.utku.speedsterdash.R
+import com.utku.speedsterdash.ui.component.CameraMaskedWithText
 import com.utku.speedsterdash.ui.theme.asset
 import com.utku.speedsterdash.ui.theme.robotoMono
 import org.koin.androidx.compose.koinViewModel
@@ -46,20 +47,19 @@ fun Speedometer(
     val vehicleSpeed by remember(useRealSpeed) {
         viewModel.vehicleSpeed(useRealSpeed)
     }.collectAsState(initial = 0)
-    val cameraPermissionState = rememberPermissionState(
-        "android.car.permission.CAR_SPEED"
+    val carSpeedPermission = rememberMultiplePermissionsState(
+        listOf("android.car.permission.CAR_SPEED", "android.permission.CAMERA")
     )
-    if (cameraPermissionState.status.isGranted) {
+    if (carSpeedPermission.permissions.none { !it.status.isGranted }) {
         SpeedometerComponent(
             modifier = modifier,
             vehicleSpeed = { vehicleSpeed },
             useRealSpeed = { useRealSpeed },
             onUseRealSpeed = { useRealSpeed = it }
-
         )
     } else {
         LaunchedEffect(key1 = Unit) {
-            cameraPermissionState.launchPermissionRequest()
+            carSpeedPermission.launchMultiplePermissionRequest()
         }
     }
 }
@@ -71,6 +71,7 @@ fun SpeedometerComponent(
     useRealSpeed: () -> Boolean = { false },
     onUseRealSpeed: (Boolean) -> Unit = { },
 ) {
+    var cameraMode by remember { mutableStateOf(false) }
     var lightMode by remember { mutableStateOf(false) }
     val switchColor by remember(lightMode) {
         mutableStateOf(
@@ -90,6 +91,22 @@ fun SpeedometerComponent(
             .fillMaxSize()
             .background(if (lightMode) Color.White else Color.Black),
     ) {
+        if (cameraMode) {
+            CameraMaskedWithText(
+                modifier = Modifier.align(Alignment.Center),
+                maskedText = vehicleSpeed().toString(),
+                backgroundColor = if (lightMode) Color.White else Color.Black
+            )
+        } else {
+            Text(
+                modifier = Modifier.align(Alignment.Center),
+                text = vehicleSpeed().toString(),
+                fontFamily = asset,
+                color = if (lightMode) Color.Black else Color.White,
+                fontSize = 300.sp
+            )
+        }
+
         Column(
             modifier = Modifier
                 .align(Alignment.CenterStart)
@@ -109,20 +126,19 @@ fun SpeedometerComponent(
                 value = lightMode,
                 switchColors = switchColor,
                 textColor = if (lightMode) Color.Black else Color.White,
-                onValueChange = {
-                    lightMode = it
-                }
+                onValueChange = { lightMode = it }
+            )
+            Spacer(modifier = Modifier.size(20.dp))
+            SpeedometerSwitch(
+                text = stringResource(R.string.camera_mode),
+                value = cameraMode,
+                switchColors = switchColor,
+                textColor = if (lightMode) Color.Black else Color.White,
+                onValueChange = { cameraMode = it }
             )
         }
-        Text(
-            modifier = Modifier.align(Alignment.Center),
-            text = vehicleSpeed().toString(),
-            fontFamily = asset,
-            color = if (lightMode) Color.Black else Color.White,
-            fontSize = 300.sp
-        )
-
     }
+
 }
 
 @Composable
